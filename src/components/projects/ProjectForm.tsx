@@ -36,27 +36,32 @@ export function ProjectForm({
   onSubmit,
 }: ProjectFormProps) {
   const formStyle: React.CSSProperties = {
-    background: "#fff",
-    border: "1px solid #e5e7ff",
-    borderRadius: 12,
-    padding: 16,
+    background: "linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%)",
+    border: "1px solid #e0e4ff",
+    borderRadius: 16,
+    padding: 24,
     display: "grid",
-    gap: 12,
+    gap: 16,
+    boxShadow: "0 2px 8px rgba(59, 91, 255, 0.08)",
   };
 
   const formRowStyle: React.CSSProperties = {
     display: "grid",
     gridTemplateColumns: "1fr 1fr",
-    gap: 12,
+    gap: 16,
   };
 
   const formErrStyle: React.CSSProperties = {
-    background: "#ffe7e7",
-    color: "#a11a1a",
-    padding: "10px 12px",
-    borderRadius: 8,
+    background: "linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)",
+    color: "#991b1b",
+    padding: "12px 16px",
+    borderRadius: 10,
     fontSize: 13,
     fontWeight: 600,
+    border: "1px solid #fca5a5",
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
   };
 
   return (
@@ -85,28 +90,67 @@ export function ProjectForm({
           placeholder="0"
           error={budgetErr}
         />
-        <label style={{ display: "grid", gap: 6 }}>
-          <span style={{ fontSize: 12, fontWeight: 700 }}>Status</span>
+        <label style={{ display: "grid", gap: 8 }}>
+          <span
+            style={{
+              fontSize: 12,
+              fontWeight: 700,
+              color: "#374151",
+              textTransform: "uppercase",
+              letterSpacing: "0.5px",
+            }}
+          >
+            Status
+          </span>
           <select
             value={status}
             onChange={(e) => onStatusChange(e.target.value as "active" | "paused")}
             style={{
-              padding: "10px 12px",
+              padding: "12px 14px",
               borderRadius: 10,
-              border: "1px solid #d9d9e3",
+              border: "2px solid #e5e7eb",
               fontSize: 14,
+              outline: "none",
+              cursor: "pointer",
+              transition: "all 0.2s ease",
+              background: "#ffffff",
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.borderColor = "#3b5bff";
+              e.currentTarget.style.boxShadow =
+                "0 0 0 3px rgba(59, 91, 255, 0.1)";
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.borderColor = "#e5e7eb";
+              e.currentTarget.style.boxShadow = "none";
             }}
           >
-            <option value="active">active</option>
-            <option value="paused">paused</option>
+            <option value="active">✅ Active</option>
+            <option value="paused">⏸ Paused</option>
           </select>
         </label>
       </div>
-      {formErr ? <div style={formErrStyle}>{formErr}</div> : null}
-      <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-        <Button disabled={saving}>{saving ? "Guardando…" : "Crear"}</Button>
-        <span style={{ fontSize: 12, opacity: 0.75 }}>
-          Reglas: nombre ≥ 3, owner requerido, budget numérico.
+      {formErr ? (
+        <div style={formErrStyle}>
+          <span>⚠️</span>
+          {formErr}
+        </div>
+      ) : null}
+      <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+        <Button disabled={saving}>
+          {saving ? "⏳ Guardando..." : "✨ Crear Proyecto"}
+        </Button>
+        <span
+          style={{
+            fontSize: 12,
+            color: "#6b7280",
+            fontWeight: 500,
+            padding: "8px 12px",
+            background: "#f3f4f6",
+            borderRadius: 6,
+          }}
+        >
+          📋 Reglas: nombre ≥ 3, owner requerido, budget numérico
         </span>
       </div>
     </form>

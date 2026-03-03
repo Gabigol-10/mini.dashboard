@@ -11,43 +11,53 @@ interface ProjectDetailProps {
 
 export function ProjectDetail({ project, onToggleStatus }: ProjectDetailProps) {
   const detailStyle: React.CSSProperties = {
-    background: "#fff",
-    border: "1px solid #e5e7ff",
-    borderRadius: 12,
-    padding: 16,
+    background: "linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%)",
+    border: "1px solid #e0e4ff",
+    borderRadius: 16,
+    padding: 24,
+    boxShadow: "0 2px 8px rgba(59, 91, 255, 0.08)",
   };
 
   const noticeStyle: React.CSSProperties = {
-    background: "#f9fafb",
+    background: "linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%)",
     border: "1px solid #e5e7eb",
     borderRadius: 12,
-    padding: 24,
+    padding: 32,
     textAlign: "center",
-    fontSize: 13,
-    opacity: 0.75,
+    fontSize: 14,
+    color: "#6b7280",
+    fontWeight: 500,
   };
 
   const kvStyle: React.CSSProperties = {
     display: "grid",
-    gridTemplateColumns: "120px 1fr",
-    gap: 12,
-    padding: "10px 0",
-    borderBottom: "1px solid #f3f4f6",
+    gridTemplateColumns: "140px 1fr",
+    gap: 16,
+    padding: "14px 0",
+    borderBottom: "1px solid #e5e7eb",
   };
 
   const kStyle: React.CSSProperties = {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: 700,
-    opacity: 0.6,
+    color: "#6b7280",
+    textTransform: "uppercase",
+    letterSpacing: "0.8px",
   };
 
   const vStyle: React.CSSProperties = {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: 600,
+    color: "#1f2937",
   };
 
   if (!project) {
-    return <div style={noticeStyle}>Selecciona un proyecto.</div>;
+    return (
+      <div style={noticeStyle}>
+        <div style={{ fontSize: 32, marginBottom: 8 }}>📋</div>
+        Selecciona un proyecto
+      </div>
+    );
   }
 
   return (
@@ -56,42 +66,71 @@ export function ProjectDetail({ project, onToggleStatus }: ProjectDetailProps) {
         style={{
           display: "flex",
           justifyContent: "space-between",
-          gap: 12,
-          alignItems: "center",
+          gap: 16,
+          alignItems: "flex-start",
+          marginBottom: 20,
         }}
       >
-        <div style={{ display: "grid", gap: 4 }}>
-          <div style={{ fontSize: 16, fontWeight: 900 }}>{project.name}</div>
-          <div style={{ fontSize: 12, opacity: 0.75 }}>ID: {project.id}</div>
+        <div style={{ display: "grid", gap: 6 }}>
+          <div
+            style={{
+              fontSize: 20,
+              fontWeight: 900,
+              color: "#1f2937",
+              lineHeight: 1.2,
+            }}
+          >
+            {project.name}
+          </div>
+          <div
+            style={{
+              fontSize: 12,
+              color: "#9ca3af",
+              fontWeight: 600,
+              fontFamily: "monospace",
+            }}
+          >
+            ID: {project.id}
+          </div>
         </div>
-        <div style={{ display: "flex", gap: 8 }}>
+        <div style={{ display: "flex", gap: 10 }}>
           <Button variant="ghost" onClick={() => onToggleStatus(project.id)}>
-            Toggle status
+            🔄 Toggle
           </Button>
         </div>
       </div>
-      <div style={{ height: 12 }} />
       <div style={kvStyle}>
-        <div style={kStyle}>Owner</div>
+        <div style={kStyle}>👤 Owner</div>
         <div style={vStyle}>{project.owner}</div>
       </div>
       <div style={kvStyle}>
-        <div style={kStyle}>Status</div>
+        <div style={kStyle}>📊 Status</div>
         <div style={vStyle}>
           <Badge tone={project.status === "active" ? "success" : "warn"}>
             {project.status}
           </Badge>
         </div>
       </div>
-      <div style={kvStyle}>
-        <div style={kStyle}>Budget</div>
+      <div style={{ ...kvStyle, borderBottom: "none" }}>
+        <div style={kStyle}>💰 Budget</div>
         <div style={vStyle}>{money(project.budget)}</div>
       </div>
-      <div style={{ height: 16 }} />
-      <div style={{ fontSize: 12, opacity: 0.75 }}>
-        Nota: este panel está hecho "a propósito" con malas prácticas
-        (acoplamiento, estado mezclado, validación a mano, servicios en el mismo
-        archivo). El refactor debe arreglar eso.
+      <div
+        style={{
+          marginTop: 20,
+          padding: 16,
+          background: "linear-gradient(135deg, #f0f4ff 0%, #e0e7ff 100%)",
+          borderRadius: 10,
+          fontSize: 12,
+          color: "#4338ca",
+          fontWeight: 500,
+          lineHeight: 1.6,
+          border: "1px solid #c7d2fe",
+        }}
+      >
+        ℹ️ <b>Nota:</b> Arquitectura refactorizada con separación de
+        responsabilidades, hooks personalizados, componentes reutilizables y
+        tipado estricto TypeScript.
       </div>
     </div>
   );

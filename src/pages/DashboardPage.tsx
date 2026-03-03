@@ -130,18 +130,24 @@ export function DashboardPage() {
       />
       <main style={styles.main}>
         <section style={styles.left}>
-          <div style={styles.sectionTitle}>Resumen</div>
+          <div style={styles.sectionTitle}>📊 Resumen</div>
           {loading ? (
-            <div style={styles.notice}>Cargando dashboard…</div>
+            <div style={styles.loadingBox}>
+              <div style={styles.spinner}></div>
+              <div style={{ marginTop: 16, fontWeight: 600 }}>
+                Cargando dashboard...
+              </div>
+            </div>
           ) : err ? (
             <div style={styles.errorBox}>
-              <div style={{ fontWeight: 800 }}>Error</div>
-              <div style={{ marginTop: 6, fontSize: 13 }}>
+              <div style={{ fontSize: 32, marginBottom: 12 }}>⚠️</div>
+              <div style={{ fontWeight: 800, fontSize: 16 }}>Error</div>
+              <div style={{ marginTop: 8, fontSize: 14 }}>
                 {err.status ? `(${err.status}) ` : ""}
                 {err.message}
               </div>
-              <div style={{ marginTop: 10, display: "flex", gap: 10 }}>
-                <Button onClick={reload}>Reintentar</Button>
+              <div style={{ marginTop: 16, display: "flex", gap: 12 }}>
+                <Button onClick={reload}>🔄 Reintentar</Button>
               </div>
             </div>
           ) : data ? (
@@ -163,8 +169,8 @@ export function DashboardPage() {
                   hint="Mensual (simulado)"
                 />
               </div>
-              <div style={{ height: 16 }} />
-              <div style={styles.sectionTitle}>Crear proyecto</div>
+              <div style={{ height: 24 }} />
+              <div style={styles.sectionTitle}>✨ Crear proyecto</div>
               <ProjectForm
                 name={name}
                 owner={owner}
@@ -184,7 +190,8 @@ export function DashboardPage() {
             </>
           ) : (
             <div style={styles.notice}>
-              Inicia sesión para ver el dashboard (token vacío = 401).
+              <div style={{ fontSize: 32, marginBottom: 12 }}>🔐</div>
+              Inicia sesión para ver el dashboard
             </div>
           )}
         </section>
@@ -194,32 +201,58 @@ export function DashboardPage() {
               display: "flex",
               alignItems: "end",
               justifyContent: "space-between",
-              gap: 12,
+              gap: 16,
             }}
           >
-            <div style={styles.sectionTitle}>Proyectos</div>
-            <div style={{ display: "flex", gap: 8 }}>
+            <div style={styles.sectionTitle}>📁 Proyectos</div>
+            <div style={{ display: "flex", gap: 10 }}>
               <input
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                placeholder="Buscar…"
+                placeholder="🔍 Buscar..."
                 style={styles.smallInput}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = "#3b5bff";
+                  e.currentTarget.style.boxShadow =
+                    "0 0 0 3px rgba(59, 91, 255, 0.1)";
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = "#e5e7eb";
+                  e.currentTarget.style.boxShadow = "none";
+                }}
               />
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
                 style={{ ...styles.smallInput, width: 140 }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = "#3b5bff";
+                  e.currentTarget.style.boxShadow =
+                    "0 0 0 3px rgba(59, 91, 255, 0.1)";
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = "#e5e7eb";
+                  e.currentTarget.style.boxShadow = "none";
+                }}
               >
-                <option value="all">Todos</option>
-                <option value="active">Activos</option>
-                <option value="paused">Pausados</option>
+                <option value="all">📋 Todos</option>
+                <option value="active">✅ Activos</option>
+                <option value="paused">⏸ Pausados</option>
               </select>
             </div>
           </div>
           {!token ? (
-            <div style={styles.notice}>Sin token. Haz login arriba.</div>
+            <div style={styles.notice}>
+              <div style={{ fontSize: 32, marginBottom: 12 }}>🔒</div>
+              Sin token. Haz login arriba
+            </div>
           ) : loading ? (
-            <div style={styles.notice}>Cargando lista…</div>
+            <div style={styles.loadingBox}>
+              <div style={styles.spinner}></div>
+              <div style={{ marginTop: 16, fontWeight: 600 }}>
+                Cargando proyectos...
+              </div>
+            </div>
           ) : data ? (
             <div style={styles.split}>
               <ProjectList
@@ -230,7 +263,10 @@ export function DashboardPage() {
               <ProjectDetail project={selected} onToggleStatus={onToggleStatus} />
             </div>
           ) : (
-            <div style={styles.notice}>No hay data.</div>
+            <div style={styles.notice}>
+              <div style={{ fontSize: 32, marginBottom: 12 }}>📭</div>
+              No hay data
+            </div>
           )}
         </section>
       </main>
@@ -238,14 +274,28 @@ export function DashboardPage() {
 .row {
   text-align: left;
   width: 100%;
-  border: 1px solid #e5e7ff;
-  background: #fff;
-  border-radius: 12px;
-  padding: 12px;
+  border: 2px solid #e5e7eb;
+  background: #ffffff;
+  borderRadius: 12px;
+  padding: 14px;
   cursor: pointer;
+  transition: all 0.2s ease;
 }
-.rowIdle:hover { border-color: #b8c1ff; }
-.rowActive { border-color: #3b5bff; box-shadow: 0 10px 30px rgba(59,91,255,0.12); }
+.rowIdle:hover { 
+  border-color: #c7d2fe; 
+  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+.rowActive { 
+  border-color: #3b5bff; 
+  box-shadow: 0 8px 20px rgba(59,91,255,0.15);
+  background: linear-gradient(135deg, #f0f4ff 0%, #e0e7ff 100%);
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
 `}</style>
     </div>
   );
@@ -254,64 +304,88 @@ export function DashboardPage() {
 const styles: Record<string, React.CSSProperties> = {
   page: {
     minHeight: "100vh",
-    background: "linear-gradient(180deg, #f6f7ff, #ffffff)",
+    background: "linear-gradient(180deg, #f0f4ff 0%, #ffffff 100%)",
     fontFamily: "system-ui, -apple-system, sans-serif",
   },
   main: {
     display: "grid",
     gridTemplateColumns: "1fr 1.5fr",
-    gap: 24,
-    padding: 24,
+    gap: 32,
+    padding: 32,
     maxWidth: 1400,
     margin: "0 auto",
   },
   left: {
     display: "grid",
-    gap: 16,
+    gap: 20,
     alignContent: "start",
   },
   right: {
     display: "grid",
-    gap: 16,
+    gap: 20,
     alignContent: "start",
   },
   sectionTitle: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: 900,
     textTransform: "uppercase",
-    letterSpacing: "0.5px",
-    opacity: 0.6,
+    letterSpacing: "1px",
+    color: "#6b7280",
   },
   grid3: {
     display: "grid",
     gridTemplateColumns: "repeat(3, 1fr)",
-    gap: 12,
+    gap: 16,
   },
   notice: {
-    background: "#f9fafb",
+    background: "linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%)",
     border: "1px solid #e5e7eb",
-    borderRadius: 12,
-    padding: 24,
+    borderRadius: 16,
+    padding: 40,
     textAlign: "center",
-    fontSize: 13,
-    opacity: 0.75,
+    fontSize: 14,
+    color: "#6b7280",
+    fontWeight: 500,
+  },
+  loadingBox: {
+    background: "linear-gradient(135deg, #f0f4ff 0%, #e0e7ff 100%)",
+    border: "1px solid #c7d2fe",
+    borderRadius: 16,
+    padding: 40,
+    textAlign: "center",
+    fontSize: 14,
+    color: "#4338ca",
+    fontWeight: 600,
+  },
+  spinner: {
+    width: 40,
+    height: 40,
+    border: "4px solid #e0e7ff",
+    borderTop: "4px solid #3b5bff",
+    borderRadius: "50%",
+    animation: "spin 1s linear infinite",
+    margin: "0 auto",
   },
   errorBox: {
-    background: "#ffe7e7",
-    border: "1px solid #ffd0d0",
-    borderRadius: 12,
-    padding: 16,
+    background: "linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)",
+    border: "1px solid #fca5a5",
+    borderRadius: 16,
+    padding: 24,
+    textAlign: "center",
+    color: "#991b1b",
   },
   split: {
     display: "grid",
     gridTemplateColumns: "1fr 1fr",
-    gap: 16,
+    gap: 20,
   },
   smallInput: {
-    padding: "8px 12px",
+    padding: "10px 14px",
     borderRadius: 8,
-    border: "1px solid #d9d9e3",
+    border: "2px solid #e5e7eb",
     fontSize: 13,
     outline: "none",
+    transition: "all 0.2s ease",
+    fontWeight: 500,
   },
 };
