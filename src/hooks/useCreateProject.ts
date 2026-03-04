@@ -9,31 +9,37 @@ import type {
 interface UseCreateProjectReturn {
   create: (payload: CreateProjectPayload) => Promise<Project>;
   saving: boolean;
-  error: string | null;
+  error: ApiError | null;
   clearError: () => void;
 }
 
 export function useCreateProject(token: string): UseCreateProjectReturn {
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState<boolean>(false);
+  const [error, setError] = useState<ApiError | null>(null);
 
   async function create(payload: CreateProjectPayload): Promise<Project> {
     setError(null);
     setSaving(true);
+
     try {
       const created = await apiCreateProject({ token, payload });
       return created;
     } catch (e) {
-      const err = e as ApiError;
-      const errorMsg = `${err.status || ""} ${err.message || "Error creando"}`.trim();
-      setError(errorMsg);
-      throw err;
-    } finally {
+  const err = e as ApiError;
+
+  const apiError: ApiError = {
+    message: err.message || "Error creando proyecto",
+    status: err.status ?? 0,
+  };
+
+  setError(apiError);
+  throw apiError;
+} finally {
       setSaving(false);
     }
   }
 
-  function clearError() {
+  function clearError(): void {
     setError(null);
   }
 

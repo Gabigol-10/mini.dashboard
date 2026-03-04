@@ -1,6 +1,7 @@
 import React from "react";
 import { Button } from "../common/Button";
 import { TextField } from "../common/TextField";
+import type { ApiError } from "../../services/dashboardService";
 
 interface ProjectFormProps {
   name: string;
@@ -10,7 +11,7 @@ interface ProjectFormProps {
   nameErr: string | null;
   ownerErr: string | null;
   budgetErr: string | null;
-  formErr: string | null;
+  formErr: ApiError | null;
   saving: boolean;
   onNameChange: (value: string) => void;
   onOwnerChange: (value: string) => void;
@@ -133,7 +134,8 @@ export function ProjectForm({
       {formErr ? (
         <div style={formErrStyle}>
           <span>⚠️</span>
-          {formErr}
+          {formErr.status ? `(${formErr.status}) ` : ""}
+          {formErr.message}
         </div>
       ) : null}
       <div style={{ display: "flex", gap: 12, alignItems: "center" }}>

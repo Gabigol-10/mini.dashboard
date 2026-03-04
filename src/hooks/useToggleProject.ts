@@ -1,39 +1,49 @@
 import { useState } from "react";
 import { apiToggleProjectStatus } from "../services/dashboardService";
-import type {
-  Project,
-  ApiError,
-} from "../services/dashboardService";
+import type { Project, ApiError } from "../services/dashboardService";
 
 interface UseToggleProjectReturn {
   toggle: (id: string) => Promise<Project>;
-  toggling: boolean;
-  error: string | null;
+  loading: boolean;
+  error: ApiError | null;
+  clearError: () => void;
 }
 
-export function useToggleProject(token: string): UseToggleProjectReturn {
-  const [toggling, setToggling] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+export function useToggleProject(
+  token: string
+): UseToggleProjectReturn {
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<ApiError | null>(null);
 
   async function toggle(id: string): Promise<Project> {
+    setLoading(true);
     setError(null);
-    setToggling(true);
+
     try {
       const updated = await apiToggleProjectStatus({ token, id });
       return updated;
     } catch (e) {
-      const err = e as ApiError;
-      const errorMsg = `Error: ${err.status || ""} ${err.message || ""}`.trim();
-      setError(errorMsg);
-      throw err;
-    } finally {
-      setToggling(false);
+  const err = e as ApiError;
+
+  setError({
+    message: err.message || "Error actualizando proyecto",
+    status: err.status ?? 0,
+  });
+
+  throw err;
+} finally {
+      setLoading(false);
     }
+  }
+
+  function clearError(): void {
+    setError(null);
   }
 
   return {
     toggle,
-    toggling,
+    loading,
     error,
+    clearError,
   };
 }

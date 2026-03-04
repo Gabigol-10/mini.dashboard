@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { apiGetDashboard } from "../services/dashboardService";
 import type {
   DashboardResponse,
@@ -8,39 +8,43 @@ import type {
 interface UseDashboardReturn {
   data: DashboardResponse | null;
   loading: boolean;
-  error: { message: string; status: number } | null;
+  error: ApiError | null;
   reload: () => Promise<void>;
 }
 
 export function useDashboard(token: string): UseDashboardReturn {
   const [data, setData] = useState<DashboardResponse | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<{ message: string; status: number } | null>(null);
+  const [error, setError] = useState<ApiError | null>(null);
 
-  async function load() {
+  const load = useCallback(async () => {
+    if (!token) return;
+
     setLoading(true);
     setError(null);
+
     try {
-      const res = await apiGetDashboard({ token });
-      setData(res);
+      const response = await apiGetDashboard({ token });
+      setData(response);
     } catch (e) {
       const err = e as ApiError;
-      setError({ message: err.message || "Error", status: err.status || 0 });
-      setData(null);
+      setError({
+        message: err.message || "Error cargando dashboard",
+        status: err.status ?? 0,
+      });
     } finally {
       setLoading(false);
     }
-  }
+  }, [token]);
 
   useEffect(() => {
     load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token]);
+  }, [load]);
 
   return {
     data,
     loading,
     error,
-    reload: load,
+    reload: load, // 👈 ESTO ES LO QUE FALTABA
   };
 }

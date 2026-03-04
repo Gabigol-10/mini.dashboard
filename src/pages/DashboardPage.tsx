@@ -15,7 +15,7 @@ import { Button } from "../components/common/Button";
 import { ProjectForm } from "../components/projects/ProjectForm";
 import { ProjectList } from "../components/projects/ProjectList";
 import { ProjectDetail } from "../components/projects/ProjectDetail";
-import type { CreateProjectPayload } from "../services/dashboardService";
+import type { CreateProjectPayload, Project } from "../services/dashboardService";
 
 interface ProjectFormValues extends Record<string, unknown> {
   name: string;
@@ -94,15 +94,15 @@ export function DashboardPage() {
   const filteredProjects = useMemo(() => {
     const items = data?.projects || [];
     return items
-      .filter((p) => (statusFilter === "all" ? true : p.status === statusFilter))
-      .filter((p) =>
+      .filter((p: Project) => (statusFilter === "all" ? true : p.status === statusFilter))
+      .filter((p: Project) =>
         q.trim() ? p.name.toLowerCase().includes(q.trim().toLowerCase()) : true
       );
   }, [data, q, statusFilter]);
 
   const selected = useMemo(() => {
     if (!data?.projects || !selectedId) return null;
-    return data.projects.find((p) => p.id === selectedId) || null;
+    return data.projects.find((p: Project) => p.id === selectedId) || null;
   }, [data, selectedId]);
 
   React.useEffect(() => {
@@ -264,6 +264,28 @@ export function DashboardPage() {
                 Cargando proyectos...
               </div>
             </div>
+          ) : err ? (
+            <div style={styles.errorBox}>
+              <div style={{ fontSize: 32, marginBottom: 12 }}>⚠️</div>
+              <div style={{ fontWeight: 800, fontSize: 16 }}>Error</div>
+              <div style={{ marginTop: 8, fontSize: 14 }}>
+                {err.status ? `(${err.status}) ` : ""}
+                {err.message}
+              </div>
+              <div style={{ marginTop: 16, display: "flex", gap: 12 }}>
+                <Button onClick={reload}>🔄 Reintentar</Button>
+              </div>
+            </div>
+          ) : data && data.projects.length === 0 ? (
+            <div style={styles.emptyBox}>
+              <div style={{ fontSize: 48, marginBottom: 16 }}>📭</div>
+              <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 8 }}>
+                No hay proyectos
+              </div>
+              <div style={{ fontSize: 14, color: "#6b7280" }}>
+                Crea tu primer proyecto usando el formulario de la izquierda
+              </div>
+            </div>
           ) : data ? (
             <div style={styles.split}>
               <ProjectList
@@ -384,6 +406,14 @@ const styles: Record<string, React.CSSProperties> = {
     padding: 24,
     textAlign: "center",
     color: "#991b1b",
+  },
+  emptyBox: {
+    background: "linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)",
+    border: "1px solid #fbbf24",
+    borderRadius: 16,
+    padding: 40,
+    textAlign: "center",
+    color: "#92400e",
   },
   split: {
     display: "grid",
