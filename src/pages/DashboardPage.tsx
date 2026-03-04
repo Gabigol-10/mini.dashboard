@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import { useDashboard } from "../hooks/useDashboard";
 import { useCreateProject } from "../hooks/useCreateProject";
 import { useToggleProject } from "../hooks/useToggleProject";
+import { useForm } from "../hooks/useForm";
 import { money } from "../utils/formatters";
 import {
   validateProjectName,
@@ -14,33 +15,81 @@ import { Button } from "../components/common/Button";
 import { ProjectForm } from "../components/projects/ProjectForm";
 import { ProjectList } from "../components/projects/ProjectList";
 import { ProjectDetail } from "../components/projects/ProjectDetail";
+import type { CreateProjectPayload } from "../services/dashboardService";
+
+interface ProjectFormValues extends Record<string, unknown> {
+  name: string;
+  owner: string;
+  budget: string;
+  status: "active" | "paused";
+}
+
+interface LoginFormValues extends Record<string, unknown> {
+  email: string;
+  password: string;
+}
 
 export function DashboardPage() {
-  // auth state
   const [token, setToken] = useState("demo-token");
-  const [email, setEmail] = useState("admin@demo.com");
-  const [pass, setPass] = useState("123456");
 
-  // hooks personalizados
   const { data, loading, error: err, reload } = useDashboard(token);
   const { create, saving, error: formErr } = useCreateProject(token);
   const { toggle } = useToggleProject(token);
 
-  // ui state
   const [q, setQ] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  // form state
-  const [name, setName] = useState("");
-  const [owner, setOwner] = useState("");
-  const [budget, setBudget] = useState("0");
-  const [status, setStatus] = useState<"active" | "paused">("active");
+  const loginForm = useForm<LoginFormValues>({
+    initialValues: {
+      email: "admin@demo.com",
+      password: "123456",
+    },
+    validate: (values) => {
+      const errors: Partial<Record<keyof LoginFormValues, string>> = {};
+      if (!values.email.includes("@")) {
+        errors.email = "Email inválido";
+      }
+      if (values.password.length < 3) {
+        errors.password = "Password muy corto";
+      }
+      return errors;
+    },
+    onSubmit: () => {
+      setToken("demo-token");
+    },
+  });
 
-  // validaciones
-  const nameErr = validateProjectName(name);
-  const ownerErr = validateOwner(owner);
-  const budgetErr = validateBudget(budget);
+  const projectForm = useForm<ProjectFormValues>({
+    initialValues: {
+      name: "",
+      owner: "",
+      budget: "0",
+      status: "active",
+    },
+    validate: (values) => {
+      const errors: Partial<Record<keyof ProjectFormValues, string>> = {};
+      const nameErr = validateProjectName(values.name);
+      const ownerErr = validateOwner(values.owner);
+      const budgetErr = validateBudget(values.budget);
+
+      if (nameErr) errors.name = nameErr;
+      if (ownerErr) errors.owner = ownerErr;
+      if (budgetErr) errors.budget = budgetErr;
+
+      return errors;
+    },
+    onSubmit: async (values) => {
+      await create({
+        name: values.name,
+        owner: values.owner,
+        budget: Number(values.budget),
+        status: values.status,
+      } as CreateProjectPayload);
+      await reload();
+      projectForm.reset();
+    },
+  });
 
   const filteredProjects = useMemo(() => {
     const items = data?.projects || [];
@@ -62,35 +111,6 @@ export function DashboardPage() {
     }
   }, [data, selectedId]);
 
-  async function onCreate(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    if (!name || name.trim().length < 3) {
-      return;
-    }
-    if (!owner || owner.trim().length < 2) {
-      return;
-    }
-    if (isNaN(Number(budget))) {
-      return;
-    }
-
-    try {
-      await create({
-        name,
-        owner,
-        budget: Number(budget),
-        status,
-      });
-      await reload();
-      setName("");
-      setOwner("");
-      setBudget("0");
-      setStatus("active");
-    } catch (e) {
-      // error manejado por el hook
-    }
-  }
-
   async function onToggleStatus(id: string) {
     try {
       await toggle(id);
@@ -99,15 +119,6 @@ export function DashboardPage() {
       const error = e as Error;
       alert(`Error: ${error.message || ""}`.trim());
     }
-  }
-
-  function onLogin(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    if (!email.includes("@") || pass.length < 3) {
-      alert("Credenciales inválidas (simulado)");
-      return;
-    }
-    setToken("demo-token");
   }
 
   function onLogout() {
@@ -120,11 +131,11 @@ export function DashboardPage() {
         token={token}
         userName={data?.me?.name}
         loading={loading}
-        email={email}
-        pass={pass}
-        onEmailChange={setEmail}
-        onPassChange={setPass}
-        onLogin={onLogin}
+        email={loginForm.values.email}
+        pass={loginForm.values.password}
+        onEmailChange={(value) => loginForm.handleChange("email", value)}
+        onPassChange={(value) => loginForm.handleChange("password", value)}
+        onLogin={loginForm.handleSubmit}
         onLogout={onLogout}
         onReload={reload}
       />
@@ -172,20 +183,20 @@ export function DashboardPage() {
               <div style={{ height: 24 }} />
               <div style={styles.sectionTitle}>✨ Crear proyecto</div>
               <ProjectForm
-                name={name}
-                owner={owner}
-                budget={budget}
-                status={status}
-                nameErr={nameErr}
-                ownerErr={ownerErr}
-                budgetErr={budgetErr}
+                name={projectForm.values.name}
+                owner={projectForm.values.owner}
+                budget={projectForm.values.budget}
+                status={projectForm.values.status}
+                nameErr={projectForm.errors.name || null}
+                ownerErr={projectForm.errors.owner || null}
+                budgetErr={projectForm.errors.budget || null}
                 formErr={formErr}
-                saving={saving}
-                onNameChange={setName}
-                onOwnerChange={setOwner}
-                onBudgetChange={setBudget}
-                onStatusChange={setStatus}
-                onSubmit={onCreate}
+                saving={saving || projectForm.submitting}
+                onNameChange={(value) => projectForm.handleChange("name", value)}
+                onOwnerChange={(value) => projectForm.handleChange("owner", value)}
+                onBudgetChange={(value) => projectForm.handleChange("budget", value)}
+                onStatusChange={(value) => projectForm.handleChange("status", value)}
+                onSubmit={projectForm.handleSubmit}
               />
             </>
           ) : (
