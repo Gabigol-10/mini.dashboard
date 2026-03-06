@@ -15,7 +15,7 @@ import { Button } from "../components/common/Button";
 import { ProjectForm } from "../components/projects/ProjectForm";
 import { ProjectList } from "../components/projects/ProjectList";
 import { ProjectDetail } from "../components/projects/ProjectDetail";
-import type { CreateProjectPayload, Project } from "../services/dashboardService";
+import type { Project } from "../services/dashboardService";
 
 interface ProjectFormValues extends Record<string, unknown> {
   name: string;
@@ -30,7 +30,8 @@ interface LoginFormValues extends Record<string, unknown> {
 }
 
 export function DashboardPage() {
-  const [token, setToken] = useState("demo-token");
+  const [token, setToken] = useState("");
+  const [loginError, setLoginError] = useState<string | null>(null);
 
   const { data, loading, error: err, reload } = useDashboard(token);
   const { create, saving, error: formErr } = useCreateProject(token);
@@ -55,8 +56,15 @@ export function DashboardPage() {
       }
       return errors;
     },
-    onSubmit: () => {
-      setToken("demo-token");
+    onSubmit: (values) => {
+      // Validar credenciales correctas
+      if (values.email === "admin@demo.com" && values.password === "123456") {
+        setToken("demo-token");
+        setLoginError(null);
+      } else {
+        setLoginError("Credenciales incorrectas");
+        setToken("");
+      }
     },
   });
 
@@ -80,14 +88,19 @@ export function DashboardPage() {
       return errors;
     },
     onSubmit: async (values) => {
-      await create({
-        name: values.name,
-        owner: values.owner,
-        budget: Number(values.budget),
-        status: values.status,
-      } as CreateProjectPayload);
-      await reload();
-      projectForm.reset();
+      try {
+        await create({
+          name: values.name,
+          owner: values.owner,
+          budget: Number(values.budget),
+          status: values.status,
+        });
+        await reload();
+        projectForm.reset();
+      } catch (error) {
+        // El error ya está siendo manejado por useCreateProject
+        // y se mostrará automáticamente en formErr
+      }
     },
   });
 
@@ -133,176 +146,185 @@ export function DashboardPage() {
         loading={loading}
         email={loginForm.values.email}
         pass={loginForm.values.password}
+        loginError={loginError}
         onEmailChange={(value) => loginForm.handleChange("email", value)}
         onPassChange={(value) => loginForm.handleChange("password", value)}
         onLogin={loginForm.handleSubmit}
         onLogout={onLogout}
         onReload={reload}
       />
-      <main style={styles.main}>
-        <section style={styles.left}>
-          <div style={styles.sectionTitle}>📊 Resumen</div>
-          {loading ? (
-            <div style={styles.loadingBox}>
-              <div style={styles.spinner}></div>
-              <div style={{ marginTop: 16, fontWeight: 600 }}>
-                Cargando dashboard...
+      
+      {!token ? (
+        <div style={styles.loginScreen}>
+          <div style={styles.loginCard}>
+            <div style={styles.loginIcon}>🔐</div>
+            <h2 style={styles.loginTitle}>Bienvenido al Dashboard</h2>
+            <p style={styles.loginSubtitle}>
+              Inicia sesión para acceder a tus proyectos y estadísticas
+            </p>
+            <div style={styles.loginCredentials}>
+              <div style={styles.credentialItem}>
+                <span style={styles.credentialLabel}>Email:</span>
+                <code style={styles.credentialValue}>admin@demo.com</code>
               </div>
-            </div>
-          ) : err ? (
-            <div style={styles.errorBox}>
-              <div style={{ fontSize: 32, marginBottom: 12 }}>⚠️</div>
-              <div style={{ fontWeight: 800, fontSize: 16 }}>Error</div>
-              <div style={{ marginTop: 8, fontSize: 14 }}>
-                {err.status ? `(${err.status}) ` : ""}
-                {err.message}
+              <div style={styles.credentialItem}>
+                <span style={styles.credentialLabel}>Password:</span>
+                <code style={styles.credentialValue}>123456</code>
               </div>
-              <div style={{ marginTop: 16, display: "flex", gap: 12 }}>
-                <Button onClick={reload}>🔄 Reintentar</Button>
-              </div>
-            </div>
-          ) : data ? (
-            <>
-              <div style={styles.grid3}>
-                <StatCard
-                  title="Revenue"
-                  value={money(data.stats.revenue)}
-                  hint="Mensual (simulado)"
-                />
-                <StatCard
-                  title="Nuevos usuarios"
-                  value={String(data.stats.newUsers)}
-                  hint="Últimos 7 días"
-                />
-                <StatCard
-                  title="Churn"
-                  value={`${Math.round(data.stats.churn * 100)}%`}
-                  hint="Mensual (simulado)"
-                />
-              </div>
-              <div style={{ height: 24 }} />
-              <div style={styles.sectionTitle}>✨ Crear proyecto</div>
-              <ProjectForm
-                name={projectForm.values.name}
-                owner={projectForm.values.owner}
-                budget={projectForm.values.budget}
-                status={projectForm.values.status}
-                nameErr={projectForm.errors.name || null}
-                ownerErr={projectForm.errors.owner || null}
-                budgetErr={projectForm.errors.budget || null}
-                formErr={formErr}
-                saving={saving || projectForm.submitting}
-                onNameChange={(value) => projectForm.handleChange("name", value)}
-                onOwnerChange={(value) => projectForm.handleChange("owner", value)}
-                onBudgetChange={(value) => projectForm.handleChange("budget", value)}
-                onStatusChange={(value) => projectForm.handleChange("status", value)}
-                onSubmit={projectForm.handleSubmit}
-              />
-            </>
-          ) : (
-            <div style={styles.notice}>
-              <div style={{ fontSize: 32, marginBottom: 12 }}>🔐</div>
-              Inicia sesión para ver el dashboard
-            </div>
-          )}
-        </section>
-        <section style={styles.right}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "end",
-              justifyContent: "space-between",
-              gap: 16,
-            }}
-          >
-            <div style={styles.sectionTitle}>📁 Proyectos</div>
-            <div style={{ display: "flex", gap: 10 }}>
-              <input
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                placeholder="🔍 Buscar..."
-                style={styles.smallInput}
-                onFocus={(e) => {
-                  e.currentTarget.style.borderColor = "#3b5bff";
-                  e.currentTarget.style.boxShadow =
-                    "0 0 0 3px rgba(59, 91, 255, 0.1)";
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.borderColor = "#e5e7eb";
-                  e.currentTarget.style.boxShadow = "none";
-                }}
-              />
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                style={{ ...styles.smallInput, width: 140 }}
-                onFocus={(e) => {
-                  e.currentTarget.style.borderColor = "#3b5bff";
-                  e.currentTarget.style.boxShadow =
-                    "0 0 0 3px rgba(59, 91, 255, 0.1)";
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.borderColor = "#e5e7eb";
-                  e.currentTarget.style.boxShadow = "none";
-                }}
-              >
-                <option value="all">📋 Todos</option>
-                <option value="active">✅ Activos</option>
-                <option value="paused">⏸ Pausados</option>
-              </select>
             </div>
           </div>
-          {!token ? (
-            <div style={styles.notice}>
-              <div style={{ fontSize: 32, marginBottom: 12 }}>🔒</div>
-              Sin token. Haz login arriba
-            </div>
-          ) : loading ? (
-            <div style={styles.loadingBox}>
-              <div style={styles.spinner}></div>
-              <div style={{ marginTop: 16, fontWeight: 600 }}>
-                Cargando proyectos...
+        </div>
+      ) : (
+        <main style={styles.main}>
+          <section style={styles.left}>
+            <div style={styles.sectionTitle}>📊 Resumen</div>
+            {loading ? (
+              <div style={styles.loadingBox}>
+                <div style={styles.spinner}></div>
+                <div style={{ marginTop: 16, fontWeight: 600 }}>
+                  Cargando dashboard...
+                </div>
+              </div>
+            ) : err ? (
+              <div style={styles.errorBox}>
+                <div style={{ fontSize: 32, marginBottom: 12 }}>⚠️</div>
+                <div style={{ fontWeight: 800, fontSize: 16 }}>Error</div>
+                <div style={{ marginTop: 8, fontSize: 14 }}>
+                  {err.status ? `(${err.status}) ` : ""}
+                  {err.message}
+                </div>
+                <div style={{ marginTop: 16, display: "flex", gap: 12 }}>
+                  <Button onClick={reload}>🔄 Reintentar</Button>
+                </div>
+              </div>
+            ) : data ? (
+              <>
+                <div style={styles.grid3}>
+                  <StatCard
+                    title="Revenue"
+                    value={money(data.stats.revenue)}
+                    hint="Mensual (simulado)"
+                  />
+                  <StatCard
+                    title="Nuevos usuarios"
+                    value={String(data.stats.newUsers)}
+                    hint="Últimos 7 días"
+                  />
+                  <StatCard
+                    title="Churn"
+                    value={`${Math.round(data.stats.churn * 100)}%`}
+                    hint="Mensual (simulado)"
+                  />
+                </div>
+                <div style={{ height: 24 }} />
+                <div style={styles.sectionTitle}>✨ Crear proyecto</div>
+                <ProjectForm
+                  name={projectForm.values.name}
+                  owner={projectForm.values.owner}
+                  budget={projectForm.values.budget}
+                  status={projectForm.values.status}
+                  nameErr={projectForm.errors.name || null}
+                  ownerErr={projectForm.errors.owner || null}
+                  budgetErr={projectForm.errors.budget || null}
+                  formErr={formErr}
+                  saving={saving || projectForm.submitting}
+                  onNameChange={(value) => projectForm.handleChange("name", value)}
+                  onOwnerChange={(value) => projectForm.handleChange("owner", value)}
+                  onBudgetChange={(value) => projectForm.handleChange("budget", value)}
+                  onStatusChange={(value) => projectForm.handleChange("status", value)}
+                  onSubmit={projectForm.handleSubmit}
+                />
+              </>
+            ) : null}
+          </section>
+          <section style={styles.right}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "end",
+                justifyContent: "space-between",
+                gap: 16,
+              }}
+            >
+              <div style={styles.sectionTitle}>📁 Proyectos</div>
+              <div style={{ display: "flex", gap: 10 }}>
+                <input
+                  value={q}
+                  onChange={(e) => setQ(e.target.value)}
+                  placeholder="🔍 Buscar..."
+                  style={styles.smallInput}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = "#3b5bff";
+                    e.currentTarget.style.boxShadow =
+                      "0 0 0 3px rgba(59, 91, 255, 0.1)";
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = "#e5e7eb";
+                    e.currentTarget.style.boxShadow = "none";
+                  }}
+                />
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  style={{ ...styles.smallInput, width: 140 }}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = "#3b5bff";
+                    e.currentTarget.style.boxShadow =
+                      "0 0 0 3px rgba(59, 91, 255, 0.1)";
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = "#e5e7eb";
+                    e.currentTarget.style.boxShadow = "none";
+                  }}
+                >
+                  <option value="all">📋 Todos</option>
+                  <option value="active">✅ Activos</option>
+                  <option value="paused">⏸ Pausados</option>
+                </select>
               </div>
             </div>
-          ) : err ? (
-            <div style={styles.errorBox}>
-              <div style={{ fontSize: 32, marginBottom: 12 }}>⚠️</div>
-              <div style={{ fontWeight: 800, fontSize: 16 }}>Error</div>
-              <div style={{ marginTop: 8, fontSize: 14 }}>
-                {err.status ? `(${err.status}) ` : ""}
-                {err.message}
+            {loading ? (
+              <div style={styles.loadingBox}>
+                <div style={styles.spinner}></div>
+                <div style={{ marginTop: 16, fontWeight: 600 }}>
+                  Cargando proyectos...
+                </div>
               </div>
-              <div style={{ marginTop: 16, display: "flex", gap: 12 }}>
-                <Button onClick={reload}>🔄 Reintentar</Button>
+            ) : err ? (
+              <div style={styles.errorBox}>
+                <div style={{ fontSize: 32, marginBottom: 12 }}>⚠️</div>
+                <div style={{ fontWeight: 800, fontSize: 16 }}>Error</div>
+                <div style={{ marginTop: 8, fontSize: 14 }}>
+                  {err.status ? `(${err.status}) ` : ""}
+                  {err.message}
+                </div>
+                <div style={{ marginTop: 16, display: "flex", gap: 12 }}>
+                  <Button onClick={reload}>🔄 Reintentar</Button>
+                </div>
               </div>
-            </div>
-          ) : data && data.projects.length === 0 ? (
-            <div style={styles.emptyBox}>
-              <div style={{ fontSize: 48, marginBottom: 16 }}>📭</div>
-              <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 8 }}>
-                No hay proyectos
+            ) : data && data.projects.length === 0 ? (
+              <div style={styles.emptyBox}>
+                <div style={{ fontSize: 48, marginBottom: 16 }}>📭</div>
+                <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 8 }}>
+                  No hay proyectos
+                </div>
+                <div style={{ fontSize: 14, color: "#6b7280" }}>
+                  Crea tu primer proyecto usando el formulario de la izquierda
+                </div>
               </div>
-              <div style={{ fontSize: 14, color: "#6b7280" }}>
-                Crea tu primer proyecto usando el formulario de la izquierda
+            ) : data ? (
+              <div style={styles.split}>
+                <ProjectList
+                  projects={filteredProjects}
+                  selectedId={selectedId}
+                  onSelectProject={setSelectedId}
+                />
+                <ProjectDetail project={selected} onToggleStatus={onToggleStatus} />
               </div>
-            </div>
-          ) : data ? (
-            <div style={styles.split}>
-              <ProjectList
-                projects={filteredProjects}
-                selectedId={selectedId}
-                onSelectProject={setSelectedId}
-              />
-              <ProjectDetail project={selected} onToggleStatus={onToggleStatus} />
-            </div>
-          ) : (
-            <div style={styles.notice}>
-              <div style={{ fontSize: 32, marginBottom: 12 }}>📭</div>
-              No hay data
-            </div>
-          )}
-        </section>
-      </main>
+            ) : null}
+          </section>
+        </main>
+      )}
       <style>{`
 .row {
   text-align: left;
@@ -428,5 +450,73 @@ const styles: Record<string, React.CSSProperties> = {
     outline: "none",
     transition: "all 0.2s ease",
     fontWeight: 500,
+    color: "#1f2937",
+    caretColor: "#3b5bff",
+    background: "#ffffff",
+  },
+  loginScreen: {
+    minHeight: "calc(100vh - 80px)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 32,
+  },
+  loginCard: {
+    background: "linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%)",
+    border: "1px solid #e0e4ff",
+    borderRadius: 24,
+    padding: 48,
+    maxWidth: 500,
+    width: "100%",
+    boxShadow: "0 8px 32px rgba(59, 91, 255, 0.12)",
+    textAlign: "center",
+  },
+  loginIcon: {
+    fontSize: 64,
+    marginBottom: 24,
+  },
+  loginTitle: {
+    fontSize: 28,
+    fontWeight: 900,
+    background: "linear-gradient(135deg, #3b5bff 0%, #5b7bff 100%)",
+    WebkitBackgroundClip: "text",
+    WebkitTextFillColor: "transparent",
+    backgroundClip: "text",
+    marginBottom: 12,
+  },
+  loginSubtitle: {
+    fontSize: 14,
+    color: "#6b7280",
+    marginBottom: 32,
+    lineHeight: 1.6,
+  },
+  loginCredentials: {
+    background: "#f9fafb",
+    border: "1px solid #e5e7eb",
+    borderRadius: 12,
+    padding: 20,
+    display: "grid",
+    gap: 12,
+    textAlign: "left",
+  },
+  credentialItem: {
+    display: "flex",
+    alignItems: "center",
+    gap: 12,
+  },
+  credentialLabel: {
+    fontSize: 13,
+    fontWeight: 600,
+    color: "#374151",
+    minWidth: 80,
+  },
+  credentialValue: {
+    fontSize: 13,
+    fontWeight: 600,
+    color: "#3b5bff",
+    background: "#f0f4ff",
+    padding: "6px 12px",
+    borderRadius: 6,
+    border: "1px solid #c7d2fe",
   },
 };
