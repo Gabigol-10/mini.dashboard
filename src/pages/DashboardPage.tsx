@@ -15,7 +15,7 @@ import { Button } from "../components/common/Button";
 import { ProjectForm } from "../components/projects/ProjectForm";
 import { ProjectList } from "../components/projects/ProjectList";
 import { ProjectDetail } from "../components/projects/ProjectDetail";
-import type { CreateProjectPayload, Project } from "../services/dashboardService";
+import type { Project } from "../services/dashboardService";
 
 interface ProjectFormValues extends Record<string, unknown> {
   name: string;
@@ -30,7 +30,8 @@ interface LoginFormValues extends Record<string, unknown> {
 }
 
 export function DashboardPage() {
-  const [token, setToken] = useState("demo-token");
+  const [token, setToken] = useState("");
+  const [loginError, setLoginError] = useState<string | null>(null);
 
   const { data, loading, error: err, reload } = useDashboard(token);
   const { create, saving, error: formErr } = useCreateProject(token);
@@ -55,8 +56,14 @@ export function DashboardPage() {
       }
       return errors;
     },
-    onSubmit: () => {
-      setToken("demo-token");
+    onSubmit: (values) => {
+      if (values.email === "admin@demo.com" && values.password === "123456") {
+        setToken("demo-token");
+        setLoginError(null);
+      } else {
+        setLoginError("Credenciales incorrectas");
+        setToken("");
+      }
     },
   });
 
@@ -80,14 +87,18 @@ export function DashboardPage() {
       return errors;
     },
     onSubmit: async (values) => {
-      await create({
-        name: values.name,
-        owner: values.owner,
-        budget: Number(values.budget),
-        status: values.status,
-      } as CreateProjectPayload);
-      await reload();
-      projectForm.reset();
+      try {
+        await create({
+          name: values.name,
+          owner: values.owner,
+          budget: Number(values.budget),
+          status: values.status,
+        });
+        await reload();
+        projectForm.reset();
+      } catch (error) {
+        // Error manejado por useCreateProject
+      }
     },
   });
 
@@ -127,18 +138,133 @@ export function DashboardPage() {
 
   return (
     <div style={styles.page}>
-      <Header
-        token={token}
-        userName={data?.me?.name}
-        loading={loading}
-        email={loginForm.values.email}
-        pass={loginForm.values.password}
-        onEmailChange={(value) => loginForm.handleChange("email", value)}
-        onPassChange={(value) => loginForm.handleChange("password", value)}
-        onLogin={loginForm.handleSubmit}
-        onLogout={onLogout}
-        onReload={reload}
-      />
+      {!token ? (
+        // PANTALLA DE LOGIN MINIMALISTA
+        <div style={styles.loginPage}>
+          {/* Panel izquierdo - Formulario */}
+          <div style={styles.loginCard}>
+            <div style={styles.loginHeader}>
+              <div style={styles.loginLogo}>🚀</div>
+              <h1 style={styles.loginTitle}>Mini Dashboard</h1>
+              <p style={styles.loginSubtitle}>
+                Sistema de gestión de proyectos profesional
+              </p>
+            </div>
+
+            <form onSubmit={loginForm.handleSubmit} style={styles.loginForm}>
+              <div style={styles.inputGroup}>
+                <label style={styles.inputLabel}>Email</label>
+                <input
+                  type="email"
+                  value={loginForm.values.email}
+                  onChange={(e) => loginForm.handleChange("email", e.target.value)}
+                  placeholder="admin@demo.com"
+                  style={styles.loginInput}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = "#3b5bff";
+                    e.currentTarget.style.boxShadow = "0 0 0 3px rgba(59, 91, 255, 0.05)";
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = "#d1d5db";
+                    e.currentTarget.style.boxShadow = "none";
+                  }}
+                />
+                {loginForm.errors.email && (
+                  <span style={styles.inputError}>{loginForm.errors.email}</span>
+                )}
+              </div>
+
+              <div style={styles.inputGroup}>
+                <label style={styles.inputLabel}>Contraseña</label>
+                <input
+                  type="password"
+                  value={loginForm.values.password}
+                  onChange={(e) => loginForm.handleChange("password", e.target.value)}
+                  placeholder="••••••"
+                  style={styles.loginInput}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = "#3b5bff";
+                    e.currentTarget.style.boxShadow = "0 0 0 3px rgba(59, 91, 255, 0.05)";
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = "#d1d5db";
+                    e.currentTarget.style.boxShadow = "none";
+                  }}
+                />
+                {loginForm.errors.password && (
+                  <span style={styles.inputError}>{loginForm.errors.password}</span>
+                )}
+              </div>
+
+              {loginError && (
+                <div style={styles.loginErrorBox}>
+                  <span>⚠️</span>
+                  <span>{loginError}</span>
+                </div>
+              )}
+
+              <Button type="submit" disabled={loginForm.submitting}>
+                {loginForm.submitting ? "Iniciando sesión..." : "Iniciar Sesión"}
+              </Button>
+            </form>
+
+            <div style={styles.loginFooter}>
+              <div style={styles.credentialsHint}>
+                <div style={styles.hintTitle}>Credenciales de prueba:</div>
+                <div style={styles.hintItem}>
+                  <span style={styles.hintLabel}>Email:</span>
+                  <code style={styles.hintCode}>admin@demo.com</code>
+                </div>
+                <div style={styles.hintItem}>
+                  <span style={styles.hintLabel}>Password:</span>
+                  <code style={styles.hintCode}>123456</code>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Panel derecho - Ilustración */}
+          <div style={styles.loginIllustration}>
+            <div style={styles.illustrationContent}>
+              <div style={styles.illustrationIcon}>📊</div>
+              <h2 style={styles.illustrationTitle}>
+                Gestiona tus proyectos de forma eficiente
+              </h2>
+              <p style={styles.illustrationText}>
+                Dashboard profesional con arquitectura escalable y moderna
+              </p>
+              <div style={styles.featureList}>
+                <div style={styles.featureItem}>
+                  <span style={styles.featureIcon}>✓</span>
+                  <span>Gestión de proyectos en tiempo real</span>
+                </div>
+                <div style={styles.featureItem}>
+                  <span style={styles.featureIcon}>✓</span>
+                  <span>Estadísticas y métricas detalladas</span>
+                </div>
+                <div style={styles.featureItem}>
+                  <span style={styles.featureIcon}>✓</span>
+                  <span>Interfaz intuitiva y responsive</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        // DASHBOARD PRINCIPAL
+        <>
+          <Header
+            token={token}
+            userName={data?.me?.name}
+            loading={loading}
+            email={loginForm.values.email}
+            pass={loginForm.values.password}
+            onEmailChange={(value) => loginForm.handleChange("email", value)}
+            onPassChange={(value) => loginForm.handleChange("password", value)}
+            onLogin={loginForm.handleSubmit}
+            onLogout={onLogout}
+            onReload={reload}
+          />
       <main style={styles.main}>
         <section style={styles.left}>
           <div style={styles.sectionTitle}>📊 Resumen</div>
@@ -303,6 +429,8 @@ export function DashboardPage() {
           )}
         </section>
       </main>
+        </>
+      )}
       <style>{`
 .row {
   text-align: left;
@@ -337,9 +465,176 @@ export function DashboardPage() {
 const styles: Record<string, React.CSSProperties> = {
   page: {
     minHeight: "100vh",
-    background: "linear-gradient(180deg, #f0f4ff 0%, #ffffff 100%)",
+    background: "#ffffff",
     fontFamily: "system-ui, -apple-system, sans-serif",
   },
+  // ESTILOS DE LOGIN MINIMALISTA
+  loginPage: {
+    minHeight: "100vh",
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    background: "#ffffff",
+  },
+  loginCard: {
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center",
+    padding: "60px 80px",
+    background: "#ffffff",
+  },
+  loginHeader: {
+    marginBottom: 48,
+  },
+  loginLogo: {
+    fontSize: 48,
+    marginBottom: 24,
+  },
+  loginTitle: {
+    fontSize: 32,
+    fontWeight: 700,
+    color: "#111827",
+    marginBottom: 8,
+    letterSpacing: "-0.5px",
+  },
+  loginSubtitle: {
+    fontSize: 16,
+    color: "#6b7280",
+    fontWeight: 400,
+    lineHeight: 1.5,
+  },
+  loginForm: {
+    display: "grid",
+    gap: 24,
+    marginBottom: 32,
+  },
+  inputGroup: {
+    display: "grid",
+    gap: 8,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: 600,
+    color: "#374151",
+  },
+  loginInput: {
+    padding: "12px 16px",
+    borderRadius: 8,
+    border: "1px solid #d1d5db",
+    fontSize: 15,
+    outline: "none",
+    transition: "all 0.2s ease",
+    color: "#111827",
+    caretColor: "#3b5bff",
+    background: "#ffffff",
+  },
+  inputError: {
+    fontSize: 13,
+    color: "#dc2626",
+    fontWeight: 500,
+  },
+  loginErrorBox: {
+    background: "#fef2f2",
+    color: "#991b1b",
+    padding: "12px 16px",
+    borderRadius: 8,
+    fontSize: 14,
+    fontWeight: 500,
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
+    border: "1px solid #fecaca",
+  },
+  loginFooter: {
+    paddingTop: 32,
+    borderTop: "1px solid #e5e7eb",
+  },
+  credentialsHint: {
+    display: "grid",
+    gap: 16,
+  },
+  hintTitle: {
+    fontSize: 13,
+    fontWeight: 600,
+    color: "#6b7280",
+    marginBottom: 8,
+  },
+  hintItem: {
+    display: "flex",
+    alignItems: "center",
+    gap: 12,
+    fontSize: 14,
+  },
+  hintLabel: {
+    fontWeight: 500,
+    color: "#6b7280",
+    minWidth: 80,
+  },
+  hintCode: {
+    fontSize: 14,
+    fontWeight: 600,
+    color: "#111827",
+    background: "#f3f4f6",
+    padding: "4px 12px",
+    borderRadius: 6,
+    border: "1px solid #e5e7eb",
+  },
+  // Panel derecho de ilustración
+  loginIllustration: {
+    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 60,
+    position: "relative",
+    overflow: "hidden",
+  },
+  illustrationContent: {
+    color: "#ffffff",
+    maxWidth: 500,
+    zIndex: 1,
+  },
+  illustrationIcon: {
+    fontSize: 80,
+    marginBottom: 32,
+    textAlign: "center",
+  },
+  illustrationTitle: {
+    fontSize: 36,
+    fontWeight: 700,
+    marginBottom: 16,
+    lineHeight: 1.2,
+    textAlign: "center",
+  },
+  illustrationText: {
+    fontSize: 18,
+    opacity: 0.9,
+    marginBottom: 48,
+    lineHeight: 1.6,
+    textAlign: "center",
+  },
+  featureList: {
+    display: "grid",
+    gap: 20,
+  },
+  featureItem: {
+    display: "flex",
+    alignItems: "center",
+    gap: 16,
+    fontSize: 16,
+    fontWeight: 500,
+  },
+  featureIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: "50%",
+    background: "rgba(255, 255, 255, 0.2)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: 16,
+    flexShrink: 0,
+  },
+  // ESTILOS DE DASHBOARD
   main: {
     display: "grid",
     gridTemplateColumns: "1fr 1.5fr",
@@ -347,6 +642,8 @@ const styles: Record<string, React.CSSProperties> = {
     padding: 32,
     maxWidth: 1400,
     margin: "0 auto",
+    background: "#f9fafb",
+    minHeight: "calc(100vh - 80px)",
   },
   left: {
     display: "grid",
