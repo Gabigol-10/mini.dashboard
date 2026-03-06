@@ -93,7 +93,7 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: "center",
     boxShadow: "0 2px 8px rgba(59, 91, 255, 0.08)",
   },
-  title: {
+  title: {                    
     display: "grid",
     gap: 4,
   },
