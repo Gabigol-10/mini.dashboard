@@ -76,7 +76,20 @@ export function UserPostsPage({
 
       <div style={styles.list}>
         {data.map((post) => (
-          <div key={post.id} style={styles.postCard}>
+          <div
+            key={post.id}
+            style={styles.postCard}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translateY(-2px)";
+              e.currentTarget.style.boxShadow =
+                "0 8px 16px rgba(0, 0, 0, 0.08)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow =
+                "0 1px 3px rgba(0, 0, 0, 0.05)";
+            }}
+          >
             <div style={styles.postHeader}>
               <span style={styles.postId}>#{post.id}</span>
               <h3 style={styles.postTitle}>{post.title}</h3>
@@ -99,80 +112,87 @@ export function UserPostsPage({
 
 const styles: Record<string, React.CSSProperties> = {
   container: {
-    padding: 32,
-    maxWidth: 900,
+    padding: "40px 32px",
+    maxWidth: 1200,
     margin: "0 auto",
   },
   header: {
-    marginBottom: 32,
+    marginBottom: 40,
   },
   title: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: 700,
     color: "#111827",
     marginBottom: 8,
     marginTop: 16,
+    letterSpacing: "-0.5px",
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 15,
     color: "#6b7280",
+    fontWeight: 400,
   },
   list: {
     display: "grid",
-    gap: 16,
+    gap: 20,
   },
   postCard: {
     background: "#ffffff",
     border: "1px solid #e5e7eb",
-    borderRadius: 12,
-    padding: 20,
-    transition: "all 0.2s ease",
+    borderRadius: 16,
+    padding: 24,
+    transition: "all 0.3s ease",
+    boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05)",
   },
   postHeader: {
     display: "flex",
     alignItems: "center",
     gap: 12,
-    marginBottom: 12,
+    marginBottom: 16,
   },
   postId: {
     fontSize: 12,
     fontWeight: 700,
     color: "#667eea",
     background: "#f0f4ff",
-    padding: "4px 10px",
-    borderRadius: 6,
+    padding: "6px 12px",
+    borderRadius: 8,
   },
   postTitle: {
-    fontSize: 16,
-    fontWeight: 600,
+    fontSize: 18,
+    fontWeight: 700,
     color: "#111827",
     flex: 1,
+    lineHeight: 1.4,
   },
   postBody: {
-    fontSize: 14,
+    fontSize: 15,
     color: "#6b7280",
-    lineHeight: 1.6,
-    marginBottom: 16,
+    lineHeight: 1.7,
+    marginBottom: 20,
   },
   postFooter: {
-    paddingTop: 16,
+    paddingTop: 20,
     borderTop: "1px solid #f3f4f6",
   },
   loadingBox: {
-    background: "#f9fafb",
+    background: "#ffffff",
     border: "1px solid #e5e7eb",
     borderRadius: 16,
-    padding: 60,
+    padding: 80,
     textAlign: "center",
+    maxWidth: 500,
+    margin: "60px auto",
+    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.05)",
   },
   spinner: {
-    width: 48,
-    height: 48,
-    border: "4px solid #e5e7eb",
+    width: 56,
+    height: 56,
+    border: "4px solid #f3f4f6",
     borderTop: "4px solid #667eea",
     borderRadius: "50%",
     animation: "spin 1s linear infinite",
-    margin: "0 auto 20px",
+    margin: "0 auto 24px",
   },
   loadingText: {
     fontSize: 16,
@@ -180,47 +200,54 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 500,
   },
   errorBox: {
-    background: "#fef2f2",
+    background: "#ffffff",
     border: "1px solid #fecaca",
     borderRadius: 16,
-    padding: 60,
+    padding: 80,
     textAlign: "center",
+    maxWidth: 500,
+    margin: "60px auto",
+    boxShadow: "0 4px 12px rgba(254, 202, 202, 0.2)",
   },
   errorIcon: {
-    fontSize: 48,
-    marginBottom: 16,
+    fontSize: 56,
+    marginBottom: 20,
   },
   errorTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 700,
     color: "#991b1b",
-    marginBottom: 8,
+    marginBottom: 12,
   },
   errorMessage: {
-    fontSize: 14,
+    fontSize: 15,
     color: "#dc2626",
-    marginBottom: 24,
+    marginBottom: 32,
+    lineHeight: 1.6,
   },
   emptyBox: {
-    background: "#f9fafb",
+    background: "#ffffff",
     border: "1px solid #e5e7eb",
     borderRadius: 16,
-    padding: 60,
+    padding: 80,
     textAlign: "center",
+    maxWidth: 500,
+    margin: "60px auto",
+    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.05)",
   },
   emptyIcon: {
-    fontSize: 48,
-    marginBottom: 16,
+    fontSize: 56,
+    marginBottom: 20,
   },
   emptyTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 700,
     color: "#374151",
-    marginBottom: 8,
+    marginBottom: 12,
   },
   emptyText: {
-    fontSize: 14,
+    fontSize: 15,
     color: "#6b7280",
-    marginBottom: 24,
+    marginBottom: 32,
   },
 };

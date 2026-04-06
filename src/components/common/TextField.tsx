@@ -41,6 +41,8 @@ export function TextField({
           fontSize: 14,
           transition: "all 0.2s ease",
           background: error ? "#fef2f2" : "#ffffff",
+          color: "#1f2937",
+          caretColor: "#3b5bff",
         }}
         onFocus={(e) => {
           if (!error) {

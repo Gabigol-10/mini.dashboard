@@ -108,7 +108,20 @@ export function PostDetailPage({ postId, onBack }: PostDetailPageProps) {
         ) : (
           <div style={styles.commentsList}>
             {comments.map((comment) => (
-              <div key={comment.id} style={styles.commentCard}>
+              <div
+                key={comment.id}
+                style={styles.commentCard}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "translateX(4px)";
+                  e.currentTarget.style.boxShadow =
+                    "0 4px 12px rgba(0, 0, 0, 0.08)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "translateX(0)";
+                  e.currentTarget.style.boxShadow =
+                    "0 1px 3px rgba(0, 0, 0, 0.05)";
+                }}
+              >
                 <div style={styles.commentHeader}>
                   <span style={styles.commentName}>{comment.name}</span>
                   <span style={styles.commentEmail}>{comment.email}</span>
@@ -125,117 +138,127 @@ export function PostDetailPage({ postId, onBack }: PostDetailPageProps) {
 
 const styles: Record<string, React.CSSProperties> = {
   container: {
-    padding: 32,
-    maxWidth: 800,
+    padding: "40px 32px",
+    maxWidth: 1000,
     margin: "0 auto",
   },
   header: {
-    marginBottom: 24,
+    marginBottom: 32,
   },
   postCard: {
     background: "#ffffff",
     border: "1px solid #e5e7eb",
     borderRadius: 16,
-    padding: 32,
-    marginBottom: 32,
+    padding: 40,
+    marginBottom: 40,
+    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)",
   },
   postHeader: {
     display: "flex",
     gap: 12,
-    marginBottom: 20,
+    marginBottom: 24,
   },
   postId: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: 700,
     color: "#667eea",
     background: "#f0f4ff",
-    padding: "6px 12px",
-    borderRadius: 6,
+    padding: "8px 16px",
+    borderRadius: 8,
   },
   userId: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: 600,
     color: "#6b7280",
     background: "#f3f4f6",
-    padding: "6px 12px",
-    borderRadius: 6,
+    padding: "8px 16px",
+    borderRadius: 8,
   },
   postTitle: {
-    fontSize: 28,
-    fontWeight: 700,
-    color: "#111827",
-    marginBottom: 16,
-    lineHeight: 1.3,
-  },
-  postBody: {
-    fontSize: 16,
-    color: "#374151",
-    lineHeight: 1.7,
-  },
-  commentsSection: {
-    marginTop: 32,
-  },
-  commentsTitle: {
-    fontSize: 20,
+    fontSize: 32,
     fontWeight: 700,
     color: "#111827",
     marginBottom: 20,
+    lineHeight: 1.3,
+    letterSpacing: "-0.5px",
+  },
+  postBody: {
+    fontSize: 17,
+    color: "#374151",
+    lineHeight: 1.8,
+  },
+  commentsSection: {
+    marginTop: 40,
+  },
+  commentsTitle: {
+    fontSize: 24,
+    fontWeight: 700,
+    color: "#111827",
+    marginBottom: 24,
+    letterSpacing: "-0.3px",
   },
   commentsList: {
     display: "grid",
-    gap: 16,
+    gap: 20,
   },
   commentCard: {
-    background: "#f9fafb",
+    background: "#ffffff",
     border: "1px solid #e5e7eb",
     borderRadius: 12,
-    padding: 20,
+    padding: 24,
+    transition: "all 0.2s ease",
+    boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05)",
   },
   commentHeader: {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 12,
-    paddingBottom: 12,
-    borderBottom: "1px solid #e5e7eb",
+    marginBottom: 16,
+    paddingBottom: 16,
+    borderBottom: "1px solid #f3f4f6",
   },
   commentName: {
-    fontSize: 14,
-    fontWeight: 600,
+    fontSize: 15,
+    fontWeight: 700,
     color: "#111827",
   },
   commentEmail: {
-    fontSize: 12,
+    fontSize: 13,
     color: "#6b7280",
+    fontWeight: 500,
   },
   commentBody: {
-    fontSize: 14,
+    fontSize: 15,
     color: "#374151",
-    lineHeight: 1.6,
+    lineHeight: 1.7,
   },
   noComments: {
     background: "#f9fafb",
     border: "1px solid #e5e7eb",
     borderRadius: 12,
-    padding: 40,
+    padding: 48,
     textAlign: "center",
     color: "#6b7280",
+    fontSize: 15,
   },
   loadingBox: {
-    background: "#f9fafb",
+    background: "#ffffff",
     border: "1px solid #e5e7eb",
     borderRadius: 16,
-    padding: 60,
+    padding: 80,
     textAlign: "center",
+    maxWidth: 500,
+    margin: "60px auto",
+    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.05)",
   },
   spinner: {
-    width: 48,
-    height: 48,
-    border: "4px solid #e5e7eb",
+    width: 56,
+    height: 56,
+    border: "4px solid #f3f4f6",
     borderTop: "4px solid #667eea",
     borderRadius: "50%",
     animation: "spin 1s linear infinite",
-    margin: "0 auto 20px",
+    margin: "0 auto 24px",
   },
   loadingText: {
     fontSize: 16,
@@ -243,42 +266,49 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 500,
   },
   errorBox: {
-    background: "#fef2f2",
+    background: "#ffffff",
     border: "1px solid #fecaca",
     borderRadius: 16,
-    padding: 60,
+    padding: 80,
     textAlign: "center",
+    maxWidth: 500,
+    margin: "60px auto",
+    boxShadow: "0 4px 12px rgba(254, 202, 202, 0.2)",
   },
   errorIcon: {
-    fontSize: 48,
-    marginBottom: 16,
+    fontSize: 56,
+    marginBottom: 20,
   },
   errorTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 700,
     color: "#991b1b",
-    marginBottom: 8,
+    marginBottom: 12,
   },
   errorMessage: {
-    fontSize: 14,
+    fontSize: 15,
     color: "#dc2626",
-    marginBottom: 24,
+    marginBottom: 32,
+    lineHeight: 1.6,
   },
   emptyBox: {
-    background: "#f9fafb",
+    background: "#ffffff",
     border: "1px solid #e5e7eb",
     borderRadius: 16,
-    padding: 60,
+    padding: 80,
     textAlign: "center",
+    maxWidth: 500,
+    margin: "60px auto",
+    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.05)",
   },
   emptyIcon: {
-    fontSize: 48,
-    marginBottom: 16,
+    fontSize: 56,
+    marginBottom: 20,
   },
   emptyTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 700,
     color: "#374151",
-    marginBottom: 24,
+    marginBottom: 32,
   },
 };

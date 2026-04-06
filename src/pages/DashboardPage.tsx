@@ -15,7 +15,7 @@ import { Button } from "../components/common/Button";
 import { ProjectForm } from "../components/projects/ProjectForm";
 import { ProjectList } from "../components/projects/ProjectList";
 import { ProjectDetail } from "../components/projects/ProjectDetail";
-import type { CreateProjectPayload, Project } from "../services/dashboardService";
+import type { Project } from "../services/dashboardService";
 
 interface ProjectFormValues extends Record<string, unknown> {
   name: string;
@@ -29,8 +29,13 @@ interface LoginFormValues extends Record<string, unknown> {
   password: string;
 }
 
-export function DashboardPage() {
-  const [token, setToken] = useState("demo-token");
+interface DashboardPageProps {
+  onLoginStateChange: (isLoggedIn: boolean) => void;
+}
+
+export function DashboardPage({ onLoginStateChange }: DashboardPageProps) {
+  const [token, setToken] = useState("");
+  const [loginError, setLoginError] = useState<string | null>(null);
 
   const { data, loading, error: err, reload } = useDashboard(token);
   const { create, saving, error: formErr } = useCreateProject(token);
@@ -55,8 +60,15 @@ export function DashboardPage() {
       }
       return errors;
     },
-    onSubmit: () => {
-      setToken("demo-token");
+    onSubmit: (values) => {
+      // Validar credenciales correctas
+      if (values.email === "admin@demo.com" && values.password === "123456") {
+        setToken("demo-token");
+        setLoginError(null);
+      } else {
+        setLoginError("Credenciales incorrectas. Verifica tu email y contraseña.");
+        setToken("");
+      }
     },
   });
 
@@ -80,14 +92,18 @@ export function DashboardPage() {
       return errors;
     },
     onSubmit: async (values) => {
-      await create({
-        name: values.name,
-        owner: values.owner,
-        budget: Number(values.budget),
-        status: values.status,
-      } as CreateProjectPayload);
-      await reload();
-      projectForm.reset();
+      try {
+        await create({
+          name: values.name,
+          owner: values.owner,
+          budget: Number(values.budget),
+          status: values.status,
+        });
+        await reload();
+        projectForm.reset();
+      } catch (error) {
+        // Error manejado por useCreateProject
+      }
     },
   });
 
@@ -104,6 +120,10 @@ export function DashboardPage() {
     if (!data?.projects || !selectedId) return null;
     return data.projects.find((p: Project) => p.id === selectedId) || null;
   }, [data, selectedId]);
+
+  React.useEffect(() => {
+    onLoginStateChange(!!token);
+  }, [token, onLoginStateChange]);
 
   React.useEffect(() => {
     if (!selectedId && data?.projects?.[0]?.id) {
@@ -127,18 +147,119 @@ export function DashboardPage() {
 
   return (
     <div style={styles.page}>
-      <Header
-        token={token}
-        userName={data?.me?.name}
-        loading={loading}
-        email={loginForm.values.email}
-        pass={loginForm.values.password}
-        onEmailChange={(value) => loginForm.handleChange("email", value)}
-        onPassChange={(value) => loginForm.handleChange("password", value)}
-        onLogin={loginForm.handleSubmit}
-        onLogout={onLogout}
-        onReload={reload}
-      />
+      {!token ? (
+        // PANTALLA DE LOGIN PROFESIONAL
+        <div style={styles.loginContainer}>
+          <div style={styles.loginCard}>
+            {/* Columna izquierda - Info */}
+            <div style={styles.loginHeader}>
+              <div style={styles.loginLogo}>📊</div>
+              <h1 style={styles.loginTitle}>Mini Dashboard</h1>
+              <p style={styles.loginSubtitle}>
+                Arquitectura profesional escalable con React + TypeScript.
+                Sistema completo de gestión de proyectos con API integrada.
+              </p>
+              <div style={{ marginTop: 40 }}>
+                <div style={styles.credentialsBox}>
+                  <div style={styles.credentialsTitle}>
+                    Credenciales de prueba:
+                  </div>
+                  <div style={styles.credentialRow}>
+                    <span style={styles.credentialLabel}>Email:</span>
+                    <code style={styles.credentialValue}>admin@demo.com</code>
+                  </div>
+                  <div style={styles.credentialRow}>
+                    <span style={styles.credentialLabel}>Password:</span>
+                    <code style={styles.credentialValue}>123456</code>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Columna derecha - Formulario */}
+            <form onSubmit={loginForm.handleSubmit} style={styles.loginForm}>
+              <div style={styles.inputGroup}>
+                <label style={styles.inputLabel}>Email</label>
+                <input
+                  type="email"
+                  value={loginForm.values.email}
+                  onChange={(e) =>
+                    loginForm.handleChange("email", e.target.value)
+                  }
+                  placeholder="admin@demo.com"
+                  style={styles.loginInput}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = "#667eea";
+                    e.currentTarget.style.boxShadow =
+                      "0 0 0 3px rgba(102, 126, 234, 0.1)";
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = "#d1d5db";
+                    e.currentTarget.style.boxShadow = "none";
+                  }}
+                />
+                {loginForm.errors.email && (
+                  <span style={styles.inputError}>
+                    {loginForm.errors.email}
+                  </span>
+                )}
+              </div>
+
+              <div style={styles.inputGroup}>
+                <label style={styles.inputLabel}>Contraseña</label>
+                <input
+                  type="password"
+                  value={loginForm.values.password}
+                  onChange={(e) =>
+                    loginForm.handleChange("password", e.target.value)
+                  }
+                  placeholder="••••••"
+                  style={styles.loginInput}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = "#667eea";
+                    e.currentTarget.style.boxShadow =
+                      "0 0 0 3px rgba(102, 126, 234, 0.1)";
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = "#d1d5db";
+                    e.currentTarget.style.boxShadow = "none";
+                  }}
+                />
+                {loginForm.errors.password && (
+                  <span style={styles.inputError}>
+                    {loginForm.errors.password}
+                  </span>
+                )}
+              </div>
+
+              {loginError && (
+                <div style={styles.loginErrorBox}>
+                  <span>⚠️</span>
+                  <span>{loginError}</span>
+                </div>
+              )}
+
+              <Button type="submit" disabled={loginForm.submitting}>
+                {loginForm.submitting ? "Iniciando sesión..." : "🔐 Login"}
+              </Button>
+            </form>
+          </div>
+        </div>
+      ) : (
+        // DASHBOARD PRINCIPAL (solo visible después de login)
+        <>
+          <Header
+            token={token}
+            userName={data?.me?.name}
+            loading={loading}
+            email={loginForm.values.email}
+            pass={loginForm.values.password}
+            onEmailChange={(value) => loginForm.handleChange("email", value)}
+            onPassChange={(value) => loginForm.handleChange("password", value)}
+            onLogin={loginForm.handleSubmit}
+            onLogout={onLogout}
+            onReload={reload}
+          />
       <main style={styles.main}>
         <section style={styles.left}>
           <div style={styles.sectionTitle}>📊 Resumen</div>
@@ -303,6 +424,8 @@ export function DashboardPage() {
           )}
         </section>
       </main>
+        </>
+      )}
       <style>{`
 .row {
   text-align: left;
@@ -337,9 +460,147 @@ export function DashboardPage() {
 const styles: Record<string, React.CSSProperties> = {
   page: {
     minHeight: "100vh",
-    background: "linear-gradient(180deg, #f0f4ff 0%, #ffffff 100%)",
+    background: "linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%)",
     fontFamily: "system-ui, -apple-system, sans-serif",
+    color: "#ffffff",
   },
+  // ESTILOS DE LOGIN
+  loginContainer: {
+    minHeight: "100vh",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    background: "linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%)",
+    padding: "40px 32px",
+  },
+  loginCard: {
+    background: "rgba(0, 0, 0, 0.8)",
+    borderRadius: 20,
+    border: "2px solid #00d4ff",
+    boxShadow: "0 0 40px rgba(0, 212, 255, 0.4), inset 0 0 40px rgba(0, 212, 255, 0.1)",
+    backdropFilter: "blur(20px)",
+    maxWidth: 1400,
+    width: "100%",
+    overflow: "hidden",
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+  },
+  loginHeader: {
+    padding: "60px 60px 40px",
+    textAlign: "left",
+    background: "rgba(0, 0, 0, 0.9)",
+    borderRight: "1px solid #00d4ff",
+  },
+  loginLogo: {
+    fontSize: 72,
+    marginBottom: 24,
+    filter: "drop-shadow(0 0 15px rgba(0, 212, 255, 0.8))",
+  },
+  loginTitle: {
+    fontSize: 36,
+    fontWeight: 700,
+    color: "#00d4ff",
+    marginBottom: 12,
+    letterSpacing: "-0.5px",
+    textShadow: "0 0 20px #00d4ff, 0 0 40px #00d4ff",
+  },
+  loginSubtitle: {
+    fontSize: 16,
+    color: "#7dd3fc",
+    fontWeight: 400,
+    lineHeight: 1.6,
+    textShadow: "0 0 10px rgba(125, 211, 252, 0.5)",
+  },
+  loginForm: {
+    padding: "60px",
+    background: "rgba(0, 0, 0, 0.7)",
+    display: "grid",
+    gap: 24,
+  },
+  inputGroup: {
+    display: "grid",
+    gap: 8,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: 600,
+    color: "#00d4ff",
+    textShadow: "0 0 5px rgba(0, 212, 255, 0.5)",
+  },
+  loginInput: {
+    padding: "12px 16px",
+    borderRadius: 10,
+    border: "2px solid #00d4ff",
+    fontSize: 15,
+    outline: "none",
+    transition: "all 0.3s ease",
+    color: "#00d4ff",
+    caretColor: "#00ffff",
+    background: "rgba(0, 0, 0, 0.7)",
+    boxShadow: "0 0 10px rgba(0, 212, 255, 0.3), inset 0 0 10px rgba(0, 212, 255, 0.1)",
+    backdropFilter: "blur(10px)",
+  },
+  inputError: {
+    fontSize: 13,
+    color: "#ff6b6b",
+    fontWeight: 500,
+    textShadow: "0 0 5px rgba(255, 107, 107, 0.5)",
+  },
+  loginErrorBox: {
+    background: "rgba(255, 59, 59, 0.2)",
+    color: "#ff6b6b",
+    padding: "12px 16px",
+    borderRadius: 10,
+    fontSize: 14,
+    fontWeight: 500,
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
+    border: "2px solid #ff3b3b",
+    boxShadow: "0 0 15px rgba(255, 59, 59, 0.4)",
+    textShadow: "0 0 5px rgba(255, 107, 107, 0.5)",
+  },
+  loginFooter: {
+    padding: "32px 60px",
+    background: "#ffffff",
+    borderTop: "1px solid #e5e7eb",
+    gridColumn: "1 / -1",
+  },
+  credentialsBox: {
+    display: "grid",
+    gap: 16,
+  },
+  credentialsTitle: {
+    fontSize: 13,
+    fontWeight: 600,
+    color: "#7dd3fc",
+    marginBottom: 8,
+    textShadow: "0 0 5px rgba(125, 211, 252, 0.5)",
+  },
+  credentialRow: {
+    display: "flex",
+    alignItems: "center",
+    gap: 12,
+    fontSize: 14,
+  },
+  credentialLabel: {
+    fontWeight: 500,
+    color: "#7dd3fc",
+    minWidth: 80,
+    textShadow: "0 0 5px rgba(125, 211, 252, 0.3)",
+  },
+  credentialValue: {
+    fontSize: 14,
+    fontWeight: 600,
+    color: "#00d4ff",
+    background: "rgba(0, 0, 0, 0.7)",
+    padding: "6px 12px",
+    borderRadius: 6,
+    border: "2px solid #00d4ff",
+    boxShadow: "0 0 10px rgba(0, 212, 255, 0.3), inset 0 0 10px rgba(0, 212, 255, 0.1)",
+    textShadow: "0 0 5px #00d4ff",
+  },
+  // ESTILOS DE DASHBOARD
   main: {
     display: "grid",
     gridTemplateColumns: "1fr 1.5fr",
@@ -347,6 +608,7 @@ const styles: Record<string, React.CSSProperties> = {
     padding: 32,
     maxWidth: 1400,
     margin: "0 auto",
+    background: "transparent",
   },
   left: {
     display: "grid",
@@ -363,7 +625,8 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 900,
     textTransform: "uppercase",
     letterSpacing: "1px",
-    color: "#6b7280",
+    color: "#00d4ff",
+    textShadow: "0 0 10px rgba(0, 212, 255, 0.5)",
   },
   grid3: {
     display: "grid",
@@ -371,49 +634,58 @@ const styles: Record<string, React.CSSProperties> = {
     gap: 16,
   },
   notice: {
-    background: "linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%)",
-    border: "1px solid #e5e7eb",
+    background: "rgba(0, 0, 0, 0.7)",
+    border: "2px solid #00d4ff",
     borderRadius: 16,
     padding: 40,
     textAlign: "center",
     fontSize: 14,
-    color: "#6b7280",
+    color: "#7dd3fc",
     fontWeight: 500,
+    boxShadow: "0 0 20px rgba(0, 212, 255, 0.3), inset 0 0 20px rgba(0, 212, 255, 0.1)",
+    backdropFilter: "blur(10px)",
   },
   loadingBox: {
-    background: "linear-gradient(135deg, #f0f4ff 0%, #e0e7ff 100%)",
-    border: "1px solid #c7d2fe",
+    background: "rgba(0, 0, 0, 0.7)",
+    border: "2px solid #00d4ff",
     borderRadius: 16,
     padding: 40,
     textAlign: "center",
     fontSize: 14,
-    color: "#4338ca",
+    color: "#00d4ff",
     fontWeight: 600,
+    boxShadow: "0 0 20px rgba(0, 212, 255, 0.4), inset 0 0 20px rgba(0, 212, 255, 0.1)",
+    backdropFilter: "blur(10px)",
   },
   spinner: {
     width: 40,
     height: 40,
-    border: "4px solid #e0e7ff",
-    borderTop: "4px solid #3b5bff",
+    border: "4px solid rgba(0, 212, 255, 0.3)",
+    borderTop: "4px solid #00d4ff",
     borderRadius: "50%",
     animation: "spin 1s linear infinite",
     margin: "0 auto",
+    boxShadow: "0 0 15px rgba(0, 212, 255, 0.5)",
   },
   errorBox: {
-    background: "linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)",
-    border: "1px solid #fca5a5",
+    background: "rgba(255, 59, 59, 0.2)",
+    border: "2px solid #ff3b3b",
     borderRadius: 16,
     padding: 24,
     textAlign: "center",
-    color: "#991b1b",
+    color: "#ff6b6b",
+    boxShadow: "0 0 20px rgba(255, 59, 59, 0.4), inset 0 0 20px rgba(255, 59, 59, 0.1)",
+    backdropFilter: "blur(10px)",
   },
   emptyBox: {
-    background: "linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)",
-    border: "1px solid #fbbf24",
+    background: "rgba(255, 193, 7, 0.2)",
+    border: "2px solid #ffc107",
     borderRadius: 16,
     padding: 40,
     textAlign: "center",
-    color: "#92400e",
+    color: "#ffeb3b",
+    boxShadow: "0 0 20px rgba(255, 193, 7, 0.4), inset 0 0 20px rgba(255, 193, 7, 0.1)",
+    backdropFilter: "blur(10px)",
   },
   split: {
     display: "grid",
@@ -423,10 +695,14 @@ const styles: Record<string, React.CSSProperties> = {
   smallInput: {
     padding: "10px 14px",
     borderRadius: 8,
-    border: "2px solid #e5e7eb",
+    border: "2px solid #00d4ff",
     fontSize: 13,
     outline: "none",
-    transition: "all 0.2s ease",
+    transition: "all 0.3s ease",
     fontWeight: 500,
+    background: "rgba(0, 0, 0, 0.7)",
+    color: "#00d4ff",
+    boxShadow: "0 0 10px rgba(0, 212, 255, 0.3), inset 0 0 10px rgba(0, 212, 255, 0.1)",
+    backdropFilter: "blur(10px)",
   },
 };

@@ -115,6 +115,7 @@ export function ProjectForm({
               cursor: "pointer",
               transition: "all 0.2s ease",
               background: "#ffffff",
+              color: "#1f2937",
             }}
             onFocus={(e) => {
               e.currentTarget.style.borderColor = "#3b5bff";
@@ -139,7 +140,7 @@ export function ProjectForm({
         </div>
       ) : null}
       <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-        <Button disabled={saving}>
+        <Button type="submit" disabled={saving}>
           {saving ? "⏳ Guardando..." : "✨ Crear Proyecto"}
         </Button>
         <span

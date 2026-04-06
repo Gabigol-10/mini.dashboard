@@ -61,7 +61,20 @@ export function UsersPage({ onSelectUser }: UsersPageProps) {
 
       <div style={styles.grid}>
         {data.map((user) => (
-          <div key={user.id} style={styles.card}>
+          <div
+            key={user.id}
+            style={styles.card}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translateY(-4px)";
+              e.currentTarget.style.boxShadow =
+                "0 12px 24px rgba(0, 0, 0, 0.1)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow =
+                "0 1px 3px rgba(0, 0, 0, 0.05)";
+            }}
+          >
             <div style={styles.cardHeader}>
               <div style={styles.avatar}>{user.name.charAt(0)}</div>
               <div>
@@ -93,104 +106,121 @@ export function UsersPage({ onSelectUser }: UsersPageProps) {
 
 const styles: Record<string, React.CSSProperties> = {
   container: {
-    padding: 32,
+    padding: "40px 32px",
     maxWidth: 1200,
     margin: "0 auto",
   },
   header: {
-    marginBottom: 32,
+    marginBottom: 40,
+    textAlign: "center",
   },
   title: {
-    fontSize: 32,
+    fontSize: 36,
     fontWeight: 700,
     color: "#111827",
-    marginBottom: 8,
+    marginBottom: 12,
+    letterSpacing: "-0.5px",
   },
   subtitle: {
     fontSize: 16,
     color: "#6b7280",
+    fontWeight: 400,
   },
   grid: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
+    gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
     gap: 24,
   },
   card: {
     background: "#ffffff",
     border: "1px solid #e5e7eb",
-    borderRadius: 12,
-    padding: 20,
-    transition: "all 0.2s ease",
+    borderRadius: 16,
+    padding: 24,
+    transition: "all 0.3s ease",
     cursor: "default",
+    boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05)",
   },
   cardHeader: {
     display: "flex",
     alignItems: "center",
     gap: 16,
-    marginBottom: 16,
-    paddingBottom: 16,
+    marginBottom: 20,
+    paddingBottom: 20,
     borderBottom: "1px solid #f3f4f6",
   },
   avatar: {
-    width: 48,
-    height: 48,
+    width: 56,
+    height: 56,
     borderRadius: "50%",
     background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
     color: "#ffffff",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 700,
+    flexShrink: 0,
+    boxShadow: "0 4px 12px rgba(102, 126, 234, 0.3)",
   },
   userName: {
-    fontSize: 16,
-    fontWeight: 600,
+    fontSize: 18,
+    fontWeight: 700,
     color: "#111827",
     marginBottom: 4,
+    lineHeight: 1.3,
   },
   userEmail: {
-    fontSize: 13,
+    fontSize: 14,
     color: "#6b7280",
+    fontWeight: 400,
   },
   cardBody: {
     display: "grid",
-    gap: 12,
-    marginBottom: 16,
+    gap: 16,
+    marginBottom: 20,
   },
   infoRow: {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
+    padding: "12px 16px",
+    background: "#f9fafb",
+    borderRadius: 8,
   },
   infoLabel: {
     fontSize: 13,
     fontWeight: 600,
     color: "#6b7280",
+    textTransform: "uppercase",
+    letterSpacing: "0.5px",
   },
   infoValue: {
-    fontSize: 13,
+    fontSize: 14,
     color: "#111827",
+    fontWeight: 600,
   },
   cardFooter: {
-    paddingTop: 16,
+    paddingTop: 20,
     borderTop: "1px solid #f3f4f6",
   },
   loadingBox: {
-    background: "#f9fafb",
+    background: "#ffffff",
     border: "1px solid #e5e7eb",
     borderRadius: 16,
-    padding: 60,
+    padding: 80,
     textAlign: "center",
+    maxWidth: 500,
+    margin: "60px auto",
+    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.05)",
   },
   spinner: {
-    width: 48,
-    height: 48,
-    border: "4px solid #e5e7eb",
+    width: 56,
+    height: 56,
+    border: "4px solid #f3f4f6",
     borderTop: "4px solid #667eea",
     borderRadius: "50%",
     animation: "spin 1s linear infinite",
-    margin: "0 auto 20px",
+    margin: "0 auto 24px",
   },
   loadingText: {
     fontSize: 16,
@@ -198,46 +228,53 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 500,
   },
   errorBox: {
-    background: "#fef2f2",
+    background: "#ffffff",
     border: "1px solid #fecaca",
     borderRadius: 16,
-    padding: 60,
+    padding: 80,
     textAlign: "center",
+    maxWidth: 500,
+    margin: "60px auto",
+    boxShadow: "0 4px 12px rgba(254, 202, 202, 0.2)",
   },
   errorIcon: {
-    fontSize: 48,
-    marginBottom: 16,
+    fontSize: 56,
+    marginBottom: 20,
   },
   errorTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 700,
     color: "#991b1b",
-    marginBottom: 8,
+    marginBottom: 12,
   },
   errorMessage: {
-    fontSize: 14,
+    fontSize: 15,
     color: "#dc2626",
-    marginBottom: 24,
+    marginBottom: 32,
+    lineHeight: 1.6,
   },
   emptyBox: {
-    background: "#f9fafb",
+    background: "#ffffff",
     border: "1px solid #e5e7eb",
     borderRadius: 16,
-    padding: 60,
+    padding: 80,
     textAlign: "center",
+    maxWidth: 500,
+    margin: "60px auto",
+    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.05)",
   },
   emptyIcon: {
-    fontSize: 48,
-    marginBottom: 16,
+    fontSize: 56,
+    marginBottom: 20,
   },
   emptyTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 700,
     color: "#374151",
-    marginBottom: 8,
+    marginBottom: 12,
   },
   emptyText: {
-    fontSize: 14,
+    fontSize: 15,
     color: "#6b7280",
   },
 };
